@@ -27,6 +27,7 @@ packages(googleway)
 packages(ggrepel)
 packages(maps)
 
+#https://www.kaggle.com/johnjdavisiv/us-counties-covid19-weather-sociohealth-data
 setwd("C:\\dev\\tamu_datathon\\data")
 df<-read.csv("US_counties_COVID19_health_weather_data.csv")
 
@@ -87,6 +88,9 @@ df.final<- df %>% inner_join(df.id.clusters, KEEP= TRUE)
 df.final.summary <- df.final %>% select("county" , "state", "lat" , "lon" , "CLUSTER")
 df.final.summary$ID <- paste(tolower(df.final.summary$state),tolower(df.final.summary$county), sep=",")
 
+#
+# Plot clusters 1 and 2 on map
+#
 world <- ne_countries(scale = "medium", returnclass = "sf")
 theme_set(theme_bw())
 ggplot(data = world) +
@@ -98,12 +102,15 @@ ggplot(data = world) +
              shape = 23, fill = "darkblue") + 
   coord_sf(xlim = c(-162, -60), ylim = c(19, 64), expand = FALSE)
   
+#
+# Color code county by cluster
+#
 counties <- st_as_sf(map("county", plot = FALSE, fill = TRUE))
 counties <- subset(counties, grepl("florida", counties$ID))
 counties$area <- as.numeric(st_area(counties))
 
+#Here we join the county shape file by the data
 county_clusters<-counties %>% inner_join(df.final.summary)
-
 
 ggplot(data = world) +
   geom_sf() +
@@ -112,46 +119,3 @@ ggplot(data = world) +
   coord_sf(xlim = c(-140, -60), ylim = c(19, 64), expand = FALSE)
 
 
-#na_count <-sapply(df3, function(y) sum(length(which(is.na(y)))))
-#hist(na_count)
-#plot(na_count)
-
-df4<-df3 %>% select_if(~ !any(is.na(.)))
-df10<-scale(df3)
-pc <- prcomp(df10)
-
-df4<-data.matrix(df3)
-df5<-df4[!rowSums(!is.finite(df4)),]
-
-pc <- prcomp(df10[,3-4])
-
-
-
-nz<- sapply(df4,var) < 10^-13
-df5<- df4[, !nz]
-
-#drop columsn with zero variance
-
-
-pc <- prcomp(df5)
-
-df3 %>%
-  gather(attributes, value, 1:13) %>%
-  ggplot(aes(x = value)) +
-  geom_histogram(fill = 'lightblue2', color = 'black') +
-  facet_wrap(~attributes, scales = 'free_x') +
-  labs(x="Values", y="Frequency") +
-  theme_bw()
-
-
-
-
-#  TRUNK
-
-#http://api.openweathermap.org/data/2.5/weather?zip=10996,us&appid=9de243494c0b295cca9337e1e96b00e2
-#https://github.com/kelvins/US-Cities-Database/blob/main/csv/us_cities.csv
-#https://github.com/plotly/datasets/blob/master/2014_us_cities.csv
-#https://www.epa.gov/air-trends/air-quality-cities-and-counties
-#https://github.com/mpjashby/crimedata
-#https://public.opendatasoft.com/api/v1/console/datasets/1.0/search/
-#http://api.openweathermap.org/data/2.5/weather?zip=10996,us&appid=9de243494c0b295cca9337e1e96b00e2
